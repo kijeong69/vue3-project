@@ -10,9 +10,22 @@
          @자식의emit명="부모의함수명"-->
     <!-- 부모Component에서 자식Component 
          :자식에서사용될이름="부모에서넘겨줄자료"-->
-    <TodoSimpleForm @add-todo="addTodo" />    
+    <TodoSimpleForm @add-todo="addTodo" />
+    <div style="color: red">{{ error }}</div>
     <div v-if="!filteredTodos.length">There is nothing to display</div>   
     <TodoList :todos="filteredTodos" @toggle-todo="toggleTodo" @delete-todo="deleteTodo" /> 
+    <hr>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <li v-if="currentPage !== 1" class="page-item">
+          <a style="cursor: pointer" class="page-link" @click="getTodos(currentPage-1)">Previous</a></li>
+        <li v-for="page in numberOfPages" :key="page" class="page-item" :class="currentPage === page ? 'active' : '' ">
+          <a style="cursor: pointer" class="page-link" @click="getTodos(page)">{{ page }}</a>
+        </li>
+        <li v-if="currentPage !== numberOfPages" class="page-item">
+          <a style="cursor: pointer" class="page-link" @click="getTodos(currentPage+1)">Next</a></li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -20,6 +33,7 @@
 import { ref, computed } from 'vue';
 import TodoSimpleForm from './components/TodoSimpleForm.vue';
 import TodoList from './components/TodoList.vue';
+import axios from 'axios';
 
 export default {
   components: {
@@ -28,28 +42,88 @@ export default {
   },
 
   setup() {
-    const todos = ref([]);    
+    const todos = ref([]);
+    const error = ref('');    
+    const numberOfTodos = ref(0);
+    const limit = 5;
+    const currentPage = ref(1);
+
+    const numberOfPages = computed(() => {
+      return Math.ceil(numberOfTodos.value / limit);
+    });
 
     const todoStyle = {
       textDecoration: 'line-through',
       color: 'gray'
     };
 
-    const addTodo = (todo) => {
-      console.log(todo);
-      todos.value.push(todo);
+    // database select
+    const getTodos = async (page = currentPage.value) => {
+      error.value = '';
+      currentPage.value = page;
+      try {
+        const res = await axios.get(`http://localhost:3000/todos?_page=${page}&_limit=${limit}`);
+        numberOfTodos.value = res.headers['x-total-count'];
+        todos.value = res.data;
+      } catch (err) {
+        error.value = 'Something went wrong.';
+      }      
     };
 
-    const toggleTodo = (index) => {
-      console.log(todos.value[index]);
-      todos.value[index].completed = !todos.value[index].completed;
-      console.log(todos.value[index]);
+    getTodos();
+
+    // database save
+    const addTodo = async (todo) => {     
+      error.value = '';
+      try {
+        const res = await axios.post('http://localhost:3000/todos', {
+          subject: todo.subject,
+          completed: todo.completed,
+        });
+        console.log(res);
+        todos.value.push(res.data);
+      } catch (err) {
+        error.value = 'Something went wrong.';
+      }     
+
+      // 비동기방식
+      // axios.post('http://localhost:3000/todos', {
+      //   subject: todo.subject,
+      //   completed: todo.completed,
+      // }).then(res => {
+      //   console.log(res);
+      //   todos.value.push(res.data);
+      // }).catch(err => {
+      //   error.value = 'Something went wrong.';
+      //   console.log(err);
+      // });    
+      // console.log("비동기 test log");  
     };
 
-    const deleteTodo = (index) => {
-      todos.value.splice(index, 1);
+    const deleteTodo = async (index) => {
+      error.value = '';
+      try {
+        const id = todos.value[index].id;
+        await axios.delete('http://localhost:3000/todos/' + id);
+        todos.value.splice(index, 1);
+      } catch (err) {
+        error.value = 'Something went wrong.';
+      }      
     };    
 
+    const toggleTodo = async (index) => {
+      error.value = '';
+      try {
+        const id = todos.value[index].id;
+        await axios.patch('http://localhost:3000/todos/' + id, {
+          completed: !todos.value[index].completed
+        });
+        todos.value[index].completed = !todos.value[index].completed;
+      } catch (err) {
+        error.value = 'Something went wrong.';
+      }       
+    };
+    
     const searchText = ref('');
     const filteredTodos = computed(() => {
       if (searchText.value) {
@@ -62,13 +136,11 @@ export default {
     });
 
     return {
-      todos,
-      todoStyle,
-      addTodo,
-      toggleTodo,
-      deleteTodo,
-      searchText,
-      filteredTodos,
+      todos, todoStyle,
+      numberOfTodos, limit, currentPage, numberOfPages,
+      getTodos, addTodo, toggleTodo, deleteTodo,
+      searchText, filteredTodos,
+      error,
     };
   }
 }
