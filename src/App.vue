@@ -10,6 +10,7 @@
          @자식의emit명="부모의함수명"-->
     <!-- 부모Component에서 자식Component 
          :자식에서사용될이름="부모에서넘겨줄자료"-->
+<<<<<<< HEAD
     <TodoSimpleForm @add-todo="addTodo" />
     <div style="color: red">{{ error }}</div>
     <div v-if="!filteredTodos.length">There is nothing to display</div>   
@@ -26,6 +27,11 @@
           <a style="cursor: pointer" class="page-link" @click="getTodos(currentPage+1)">Next</a></li>
       </ul>
     </nav>
+=======
+    <TodoSimpleForm @add-todo="addTodo" />    
+    <div v-if="!filteredTodos.length">There is nothing to display</div>   
+    <TodoList :todos="filteredTodos" @toggle-todo="toggleTodo" @delete-todo="deleteTodo" /> 
+>>>>>>> 11bc1903444c3a80c2026b2440bbc04962b864e6
   </div>
 </template>
 
@@ -33,7 +39,10 @@
 import { ref, computed } from 'vue';
 import TodoSimpleForm from './components/TodoSimpleForm.vue';
 import TodoList from './components/TodoList.vue';
+<<<<<<< HEAD
 import axios from 'axios';
+=======
+>>>>>>> 11bc1903444c3a80c2026b2440bbc04962b864e6
 
 export default {
   components: {
@@ -42,6 +51,7 @@ export default {
   },
 
   setup() {
+<<<<<<< HEAD
     const todos = ref([]);
     const error = ref('');    
     const numberOfTodos = ref(0);
@@ -51,12 +61,16 @@ export default {
     const numberOfPages = computed(() => {
       return Math.ceil(numberOfTodos.value / limit);
     });
+=======
+    const todos = ref([]);    
+>>>>>>> 11bc1903444c3a80c2026b2440bbc04962b864e6
 
     const todoStyle = {
       textDecoration: 'line-through',
       color: 'gray'
     };
 
+<<<<<<< HEAD
     // database select
     const getTodos = async (page = currentPage.value) => {
       error.value = '';
@@ -124,6 +138,23 @@ export default {
       }       
     };
     
+=======
+    const addTodo = (todo) => {
+      console.log(todo);
+      todos.value.push(todo);
+    };
+
+    const toggleTodo = (index) => {
+      console.log(todos.value[index]);
+      todos.value[index].completed = !todos.value[index].completed;
+      console.log(todos.value[index]);
+    };
+
+    const deleteTodo = (index) => {
+      todos.value.splice(index, 1);
+    };    
+
+>>>>>>> 11bc1903444c3a80c2026b2440bbc04962b864e6
     const searchText = ref('');
     const filteredTodos = computed(() => {
       if (searchText.value) {
@@ -136,11 +167,21 @@ export default {
     });
 
     return {
+<<<<<<< HEAD
       todos, todoStyle,
       numberOfTodos, limit, currentPage, numberOfPages,
       getTodos, addTodo, toggleTodo, deleteTodo,
       searchText, filteredTodos,
       error,
+=======
+      todos,
+      todoStyle,
+      addTodo,
+      toggleTodo,
+      deleteTodo,
+      searchText,
+      filteredTodos,
+>>>>>>> 11bc1903444c3a80c2026b2440bbc04962b864e6
     };
   }
 }

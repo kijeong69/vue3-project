@@ -7,7 +7,11 @@
                 <!-- 
                 <input class="form-check-input" type="checkbox" v-model="todo.completed">
                 -->
+<<<<<<< HEAD
                 <input class="form-check-input" type="checkbox" :checked="todo.completed" @change="toggleTodo(index)">
+=======
+                <input class="form-check-input" type="checkbox" :value="todo.completed" @change="toggleTodo(index)">
+>>>>>>> 11bc1903444c3a80c2026b2440bbc04962b864e6
                 <!-- style bind -->
                 <!-- 
                 <label class="form-check-label" :style="todo.completed ? todoStyle : {}">{{ todo.subject}}</label>
