@@ -47,12 +47,12 @@
     },
     {
       "subject": "sale rice",
-      "completed": false,
+      "completed": true,
       "id": 16
     },
     {
       "subject": "sale pen",
-      "completed": false,
+      "completed": true,
       "id": 17
     },
     {
@@ -61,14 +61,10 @@
       "id": 18
     },
     {
-      "subject": "new todo",
+      "subject": "sale mouse",
       "completed": false,
-      "id": 19
-    },
-    {
-      "subject": "new todo2",
-      "completed": false,
-      "id": 20
+      "body": "sale mouse at supermarket",
+      "id": 21
     }
   ]
 }

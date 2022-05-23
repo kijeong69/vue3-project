@@ -1,7 +1,10 @@
 <template>
-  <router-view />
-  <div class="container">
-    <h2>To-Do List</h2>
+    <div>
+      <div class="d-flex justify-content-between mb-3">
+        <h2>To-Do List</h2>
+        <button class="btn btn-primary" @click="moveToCreatePage">Create Todo</button>
+      </div>
+    
     <input 
       class="form-control" type="text" 
       v-model="searchText" placeholder="Search"
@@ -12,7 +15,6 @@
          @자식의emit명="부모의함수명"-->
     <!-- 부모Component에서 자식Component 
          :자식에서사용될이름="부모에서넘겨줄자료"-->
-    <TodoSimpleForm @add-todo="addTodo" />
     <div style="color: red">{{ error }}</div>
     <div v-if="!todos.length">There is nothing to display</div>   
     <TodoList :todos="todos" @toggle-todo="toggleTodo" @delete-todo="deleteTodo" /> 
@@ -29,28 +31,38 @@
       </ul>
     </nav>
   </div>
+  <Toast v-if="showToast" :message="toastMessage" :type="toastAlertType" />
 </template>
 
 <script>
 import { ref, computed, watch } from 'vue';
 //@는 src forder를 가르킨다
-import TodoSimpleForm from '@/components/TodoSimpleForm.vue';
 import TodoList from '@/components/TodoList.vue';
 import axios from 'axios';
+import Toast from '@/components/Toast.vue';
+import { useToast } from '@/composables/toast';
+import { useRouter } from 'vue-router';
 
 export default {
   components: {
-    TodoSimpleForm,
-    TodoList
+    TodoList,
+    Toast,
   },
 
   setup() {
-    const todos = ref([]);
-    const error = ref('');    
+    const router = useRouter();
+    const todos = ref([]);  
     const numberOfTodos = ref(0);
     const limit = 5;
     const currentPage = ref(1);
-    const searchText = ref('');    
+    const searchText = ref(''); 
+    
+    const {
+        showToast,
+        toastMessage,
+        toastAlertType,
+        triggerToast
+    } = useToast();
 
     // 참조변수일 경우
     // watch([currentPage, numberOfTodos], (current, prev) => {
@@ -85,14 +97,13 @@ export default {
 
     // database select
     const getTodos = async (page = currentPage.value) => {
-      error.value = '';
       currentPage.value = page;
       try {
         const res = await axios.get(`http://localhost:3000/todos?_sort=id&_order=desc&subject_like=${searchText.value}&_page=${page}&_limit=${limit}`);
         numberOfTodos.value = res.headers['x-total-count'];
         todos.value = res.data;
       } catch (err) {
-        error.value = 'Something went wrong.';
+        triggerToast('Something went wrong.','danger');
       }      
     };
 
@@ -100,7 +111,6 @@ export default {
 
     // database save
     const addTodo = async (todo) => {     
-      error.value = '';
       try {
         await axios.post('http://localhost:3000/todos', {
           subject: todo.subject,
@@ -110,7 +120,7 @@ export default {
         // console.log(res);
         // todos.value.push(res.data);
       } catch (err) {
-        error.value = 'Something went wrong.';
+        triggerToast('Something went wrong.','danger');
       }     
 
       // 비동기방식
@@ -127,31 +137,34 @@ export default {
       // console.log("비동기 test log");  
     };
 
-    const deleteTodo = async (index) => {
-      error.value = '';
+    const deleteTodo = async (id) => {
       try {
-        const id = todos.value[index].id;
         await axios.delete('http://localhost:3000/todos/' + id);
         getTodos(currentPage.value);
         // todos.value.splice(index, 1);
       } catch (err) {
-        error.value = 'Something went wrong.';
+        triggerToast('Something went wrong.','danger');
       }      
     };    
 
-    const toggleTodo = async (index) => {
-      error.value = '';
+    const toggleTodo = async (index, checked) => {
       try {
         const id = todos.value[index].id;
         await axios.patch('http://localhost:3000/todos/' + id, {
-          completed: !todos.value[index].completed
+          completed: checked
         });
-        todos.value[index].completed = !todos.value[index].completed;
+        todos.value[index].completed = checked;
       } catch (err) {
-        error.value = 'Something went wrong.';
+        triggerToast('Something went wrong.','danger');
       }       
     };
-    
+
+    const moveToCreatePage = () => {
+      router.push({
+        name: 'TodoCreate'
+      })
+    };
+
     // 검색기능
     let timeout = null;
     const searchTodo = () => {
@@ -181,8 +194,8 @@ export default {
       numberOfTodos, limit, currentPage, numberOfPages,
       getTodos, addTodo, toggleTodo, deleteTodo,
       searchText, searchTodo,
-      // filteredTodos,
-      error,
+      showToast, toastMessage, toastAlertType,      
+      moveToCreatePage,    
     };
   }
 }
